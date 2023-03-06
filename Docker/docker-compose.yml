@@ -1,0 +1,50 @@
+version: '3'
+
+services:
+  php:
+    build:
+      context: ./images/php-fpm
+    container_name: ng-poc-php
+    volumes:
+      - ../Api:/var/www/ng-poc
+    depends_on:
+      - ngdb
+  nginx:
+    build:
+      context: ./images/nginx
+    container_name: ng-poc-nginx
+    ports:
+      - '80:80'
+      - '443:443'
+    volumes_from:
+      - php
+    volumes:
+      - ./logs/nginx/:/var/log/nginx
+    depends_on:
+      - php
+  ngdb:
+    image: mariadb
+    container_name: ng-poc-db
+    ports:
+      - '3306:3306'
+    environment:
+      MARIADB_ROOT_PASSWORD: root
+      MARIADB_DATABASE: ng-poc
+      MARIADB_USER: usrdev
+      MARIADB_PASSWORD: passdev
+    volumes:
+      - db-data-ng-poc:/var/lib/mysql
+  phpmyadmin:
+    image: phpmyadmin
+    container_name: ng-poc-phpmyadmin
+    ports:
+      - '8080:80'
+    depends_on:
+      - ngdb
+    environment:
+      - PMA_HOST=ngdb
+      - PMA_USER=root
+      - PMA_PASSWORD=root
+
+volumes:
+  db-data-ng-poc:
